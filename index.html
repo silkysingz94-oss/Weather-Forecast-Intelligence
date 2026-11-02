@@ -1,0 +1,1696 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAMBIA WEATHER FORECAST INTELLIGENCE | SILKYSINGZ GEOAI</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --navy:#10243a;
+    --blue:#1769aa;
+    --cyan:#00a6b2;
+    --green:#16865b;
+    --bg:#f2f5f9;
+    --border:#dce3eb;
+    --text:#243447;
+    --muted:#718096;
+    --white:#fff;
+}
+
+* { box-sizing:border-box; }
+
+html, body {
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial,Helvetica,sans-serif;
+    color:var(--text);
+    background:var(--bg);
+}
+
+button, input, select { font:inherit; }
+
+.header {
+    height:66px;
+    background:var(--navy);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    gap:15px;
+    position:relative;
+    z-index:1000;
+}
+
+.brand {
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.brand-icon {
+    width:39px;
+    height:39px;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#00a6b2,#1769aa);
+    font-size:21px;
+    font-weight:bold;
+}
+
+.brand h1 {
+    font-size:16px;
+    margin:0 0 4px;
+}
+
+.brand small {
+    color:#cbd5e1;
+    font-size:10px;
+    letter-spacing:1px;
+}
+
+.header-status {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:11px;
+    color:#dbeafe;
+}
+
+.status-dot {
+    width:8px;
+    height:8px;
+    display:inline-block;
+    border-radius:50%;
+    background:#38d996;
+    margin-right:5px;
+}
+
+.dashboard {
+    display:grid;
+    grid-template-columns:310px minmax(0,1fr) 340px;
+    height:calc(100vh - 66px);
+    width:100%;
+    overflow:hidden;
+}
+
+/* LEFT PANEL: VERTICAL SCROLL ONLY */
+.left-panel {
+    height:100%;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    scrollbar-color:#aab7c8 transparent;
+    background:white;
+    border-right:1px solid var(--border);
+    padding:16px;
+}
+
+/* CENTRE: MAP DOES NOT SCROLL */
+.map-panel {
+    position:relative;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+    background:#e7edf2;
+}
+
+#map {
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    z-index:1;
+}
+
+/* RIGHT PANEL: VERTICAL SCROLL ONLY */
+.right-panel {
+    height:100%;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    scrollbar-color:#aab7c8 transparent;
+    background:#f8fafc;
+    border-left:1px solid var(--border);
+    padding:16px;
+}
+
+.left-panel::-webkit-scrollbar,
+.right-panel::-webkit-scrollbar {
+    width:6px;
+}
+
+.left-panel::-webkit-scrollbar-thumb,
+.right-panel::-webkit-scrollbar-thumb {
+    background:#aab7c8;
+    border-radius:10px;
+}
+
+.panel-heading {
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.7px;
+    color:#334155;
+    margin:2px 0 14px;
+}
+
+.section {
+    background:white;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:13px;
+    margin-bottom:13px;
+}
+
+.section-title {
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:12px;
+    color:#334155;
+}
+
+.field { margin-bottom:12px; }
+
+.field:last-child { margin-bottom:0; }
+
+.field label {
+    display:block;
+    font-size:11px;
+    color:#64748b;
+    margin-bottom:6px;
+    font-weight:600;
+}
+
+input, select {
+    width:100%;
+    padding:10px;
+    border:1px solid #d7e0e9;
+    border-radius:7px;
+    background:white;
+    color:#243447;
+    outline:none;
+    font-size:12px;
+}
+
+input:focus, select:focus {
+    border-color:var(--blue);
+    box-shadow:0 0 0 2px #1769aa18;
+}
+
+.btn {
+    border:0;
+    border-radius:7px;
+    padding:10px 12px;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    width:100%;
+    transition:.2s;
+}
+
+.btn-primary {
+    color:white;
+    background:var(--blue);
+}
+
+.btn-primary:hover { background:#12558c; }
+
+.btn-secondary {
+    color:#334155;
+    background:#eaf0f6;
+}
+
+.btn-gps {
+    color:white;
+    background:var(--green);
+}
+
+.btn + .btn { margin-top:8px; }
+
+.btn:disabled {
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+.small-note {
+    font-size:10px;
+    line-height:1.5;
+    color:var(--muted);
+    margin-top:8px;
+}
+
+.loading {
+    color:var(--blue);
+    font-size:11px;
+    font-weight:600;
+    padding:8px 0;
+}
+
+.map-top {
+    position:absolute;
+    top:12px;
+    left:12px;
+    right:12px;
+    z-index:500;
+    display:flex;
+    justify-content:space-between;
+    pointer-events:none;
+    gap:10px;
+}
+
+.map-badge {
+    background:white;
+    padding:9px 12px;
+    border-radius:8px;
+    box-shadow:0 2px 10px #0002;
+    font-size:11px;
+    font-weight:700;
+    pointer-events:auto;
+}
+
+.map-actions {
+    display:flex;
+    gap:6px;
+    pointer-events:auto;
+}
+
+.map-actions button {
+    border:0;
+    background:white;
+    border-radius:7px;
+    padding:9px 11px;
+    cursor:pointer;
+    box-shadow:0 2px 10px #0002;
+    font-size:11px;
+}
+
+.map-legend {
+    position:absolute;
+    bottom:18px;
+    left:12px;
+    z-index:500;
+    background:white;
+    border-radius:9px;
+    padding:12px;
+    box-shadow:0 2px 10px #0002;
+    font-size:10px;
+    line-height:1.9;
+}
+
+.legend-dot {
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    display:inline-block;
+    margin-right:6px;
+}
+
+.weather-location {
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:5px;
+}
+
+.weather-description {
+    color:#64748b;
+    font-size:11px;
+    margin-bottom:12px;
+}
+
+.temperature {
+    font-size:43px;
+    font-weight:700;
+    letter-spacing:-2px;
+    color:#1769aa;
+}
+
+.weather-icon {
+    font-size:36px;
+    float:right;
+}
+
+.weather-meta {
+    font-size:11px;
+    color:#64748b;
+    margin-top:4px;
+}
+
+.kpi-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+    margin-bottom:13px;
+}
+
+.kpi {
+    background:white;
+    border:1px solid var(--border);
+    padding:12px;
+    border-radius:9px;
+}
+
+.kpi-label {
+    color:#718096;
+    font-size:10px;
+    margin-bottom:8px;
+}
+
+.kpi-value {
+    font-size:20px;
+    font-weight:700;
+    color:#243447;
+}
+
+.kpi-unit {
+    font-size:10px;
+    color:#64748b;
+    margin-top:4px;
+}
+
+.chart-box {
+    background:white;
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:12px;
+    margin-bottom:13px;
+}
+
+.chart-title {
+    font-size:11px;
+    font-weight:700;
+    margin-bottom:12px;
+}
+
+.chart-container {
+    position:relative;
+    height:190px;
+}
+
+.forecast-list {
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.forecast-day {
+    display:grid;
+    grid-template-columns:65px 30px 1fr 80px;
+    gap:7px;
+    align-items:center;
+    background:#f8fafc;
+    border-radius:7px;
+    padding:9px 7px;
+    font-size:10px;
+}
+
+.forecast-day strong { font-size:11px; }
+
+.forecast-icon { font-size:17px; }
+
+.forecast-rain {
+    color:#1769aa;
+    text-align:right;
+}
+
+.forecast-temp { text-align:right; }
+
+.footer {
+    font-size:9px;
+    line-height:1.6;
+    color:#718096;
+    padding:10px 3px 16px;
+}
+
+.footer strong { color:#334155; }
+
+.badge {
+    display:inline-block;
+    padding:4px 7px;
+    border-radius:5px;
+    background:#e7f3ff;
+    color:#1769aa;
+    font-size:9px;
+    font-weight:700;
+}
+
+#appMessage {
+    font-size:10px;
+    line-height:1.5;
+    color:#64748b;
+    margin-top:8px;
+    min-height:15px;
+}
+
+@media(max-width:1050px) {
+    .dashboard {
+        grid-template-columns:270px minmax(0,1fr) 290px;
+    }
+}
+
+@media(max-width:800px) {
+    html, body {
+        height:auto;
+        overflow:auto;
+    }
+
+    .header { height:60px; }
+
+    .dashboard {
+        display:flex;
+        flex-direction:column;
+        height:auto;
+        overflow:visible;
+    }
+
+    .left-panel, .right-panel {
+        height:auto;
+        max-height:450px;
+        overflow-y:auto;
+        border:0;
+    }
+
+    .map-panel {
+        height:480px;
+        min-height:480px;
+        flex:none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="brand-icon">G</div>
+        <div>
+            <h1>GAMBIA WEATHER INTELLIGENCE</h1>
+            <small>SILKYSINGZ GEOAI • WEATHER FORECAST PLATFORM</small>
+        </div>
+    </div>
+    <div class="header-status">
+        <span><i class="status-dot"></i>Application ready</span>
+        <span id="clock">--:--</span>
+    </div>
+</header>
+
+<div class="dashboard">
+
+    <!-- LEFT: SCROLLABLE CONTROLS -->
+    <aside class="left-panel">
+
+        <div class="panel-heading">Weather controls</div>
+
+        <div class="section">
+            <div class="section-title">Location selection</div>
+
+            <div class="field">
+                <label>Search all mapped settlements</label>
+                <input id="settlementSearch" list="settlementOptions"
+                       placeholder="Search settlement name...">
+                <datalist id="settlementOptions"></datalist>
+            </div>
+
+            <div class="field">
+                <label>Administrative region</label>
+                <select id="regionSelect">
+                    <option value="">All regions</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>District / LGA</label>
+                <select id="districtSelect">
+                    <option value="">All districts</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Mapped settlement</label>
+                <select id="settlementSelect">
+                    <option value="">Select settlement</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" id="loadWeather">
+                Get Settlement Weather
+            </button>
+
+            <button class="btn btn-gps" id="gpsButton">
+                ◎ Use My Current GPS Location
+            </button>
+
+            <button class="btn btn-secondary" id="resetButton">
+                Reset Dashboard
+            </button>
+
+            <div class="small-note">
+                GPS requires browser permission and an HTTPS or localhost connection.
+            </div>
+
+            <div id="appMessage"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Map configuration</div>
+
+            <div class="field">
+                <label>Basemap</label>
+                <select id="basemapSelect">
+                    <option value="street">OpenStreetMap</option>
+                    <option value="satellite">Satellite imagery</option>
+                    <option value="topo">Topographic</option>
+                    <option value="dark">Dark map</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Settlement marker visibility</label>
+                <select id="markerSelect">
+                    <option value="all">All mapped settlements</option>
+                    <option value="selected">Selected location only</option>
+                    <option value="none">Hide settlement markers</option>
+                </select>
+            </div>
+
+            <div class="small-note">
+                Settlement coverage depends on OpenStreetMap mapping completeness.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Data information</div>
+            <div class="field">
+                <label>Mapped settlements loaded</label>
+                <div class="kpi-value" id="settlementCount">Loading...</div>
+            </div>
+            <div class="field">
+                <label>Weather data provider</label>
+                <span class="badge">Open-Meteo API</span>
+            </div>
+            <div class="field">
+                <label>Settlement data provider</label>
+                <span class="badge">OpenStreetMap / Overpass</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">About the platform</div>
+            <p class="small-note">
+                A browser-based weather intelligence prototype for The Gambia.
+                It combines mapped settlements, GPS coordinates, current
+                weather observations and forecast information.
+            </p>
+            <p class="small-note">
+                This is not a locally trained ECMWF Anemoi model or an
+                official national meteorological forecasting service.
+            </p>
+        </div>
+
+    </aside>
+
+    <!-- CENTRE: FIXED INTERACTIVE MAP -->
+    <main class="map-panel">
+
+        <div class="map-top">
+            <div class="map-badge" id="mapLocationLabel">
+                The Gambia • Settlement map
+            </div>
+            <div class="map-actions">
+                <button id="zoomGambia">Country view</button>
+                <button id="mapGps">My GPS</button>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="map-legend">
+            <strong>Map legend</strong><br>
+            <span class="legend-dot" style="background:#1769aa"></span>Mapped settlement<br>
+            <span class="legend-dot" style="background:#e07820"></span>Selected location<br>
+            <span class="legend-dot" style="background:#16865b"></span>Current GPS position
+        </div>
+
+    </main>
+
+    <!-- RIGHT: SCROLLABLE ANALYTICS -->
+    <aside class="right-panel">
+
+        <div class="panel-heading">Weather analytics</div>
+
+        <div class="section">
+            <div class="section-title">Current weather conditions</div>
+
+            <div id="weatherCard">
+                <div class="weather-location" id="weatherLocation">
+                    Select a settlement
+                </div>
+                <div class="weather-description" id="weatherDescription">
+                    Weather information will appear here.
+                </div>
+                <div class="weather-icon" id="weatherIcon">🌤️</div>
+                <div class="temperature" id="temperature">--°</div>
+                <div class="weather-meta" id="weatherTime">
+                    Waiting for location selection
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi">
+                <div class="kpi-label">Feels like</div>
+                <div class="kpi-value" id="feelsLike">--</div>
+                <div class="kpi-unit">°C</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Humidity</div>
+                <div class="kpi-value" id="humidity">--</div>
+                <div class="kpi-unit">Percent</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Wind speed</div>
+                <div class="kpi-value" id="wind">--</div>
+                <div class="kpi-unit">km/h</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Precipitation</div>
+                <div class="kpi-value" id="rain">--</div>
+                <div class="kpi-unit">mm</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Cloud cover</div>
+                <div class="kpi-value" id="cloud">--</div>
+                <div class="kpi-unit">Percent</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Pressure</div>
+                <div class="kpi-value" id="pressure">--</div>
+                <div class="kpi-unit">hPa</div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">Hourly temperature forecast</div>
+            <div class="chart-container">
+                <canvas id="temperatureChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">Hourly precipitation forecast</div>
+            <div class="chart-container">
+                <canvas id="rainChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Seven-day forecast</div>
+            <div class="forecast-list" id="forecastList">
+                <div class="small-note">Select a location to load the forecast.</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Forecast summary</div>
+            <div class="field">
+                <label>Maximum temperature (7 days)</label>
+                <div class="kpi-value" id="weekMax">-- °C</div>
+            </div>
+            <div class="field">
+                <label>Minimum temperature (7 days)</label>
+                <div class="kpi-value" id="weekMin">-- °C</div>
+            </div>
+            <div class="field">
+                <label>Total forecast rainfall</label>
+                <div class="kpi-value" id="weekRain">-- mm</div>
+            </div>
+            <div class="field">
+                <label>Highest daily rain probability</label>
+                <div class="kpi-value" id="weekProbability">-- %</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Export forecast</div>
+            <button class="btn btn-primary" id="exportCsv">
+                Download 7-Day Forecast CSV
+            </button>
+            <div class="small-note">
+                Exports the currently selected location's daily forecast.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Methodology and sources</div>
+            <p class="small-note">
+                Current conditions and forecast variables are retrieved
+                from the Open-Meteo forecast API. Settlement locations
+                are queried from OpenStreetMap through Overpass.
+            </p>
+            <p class="small-note">
+                Forecasts are model-derived guidance and may differ from
+                official observations or warnings.
+            </p>
+            <p class="small-note">
+                Map tiles © OpenStreetMap contributors.
+            </p>
+            <p class="small-note">
+                Open-Meteo: https://open-meteo.com/
+            </p>
+            <p class="small-note">
+                OpenStreetMap: https://www.openstreetmap.org/
+            </p>
+        </div>
+
+        <div class="footer">
+            <strong>GBoS GEOAI | Weather Intelligence</strong><br>
+            Designed and developed by Ansu Singhateh<br>
+            GIS Analyst | GIS / Cartography Unit<br>
+            Gambia Bureau of Statistics (GBoS)<br>
+            <br>
+            Independent research and educational prototype.
+            Not an official GBoS or national meteorological forecast.
+        </div>
+
+    </aside>
+
+</div>
+
+<script>
+/* =========================================================
+   GAMBIA WEATHER INTELLIGENCE
+   Browser-based weather and settlement application
+========================================================= */
+
+const GAMBIA_CENTER = [13.4432, -15.3101];
+
+const REGIONS = [
+    "Banjul",
+    "Kanifing",
+    "Brikama",
+    "Mansakonko",
+    "Kerewan",
+    "Kuntaur",
+    "Janjanbureh",
+    "Basse"
+];
+
+/* Administrative area approximation for filtering.
+   Settlement coordinates are still sourced from OSM. */
+const ADMIN_AREAS = [
+    {name:"Banjul", lat:13.4549, lon:-16.5790, radius:0.045},
+    {name:"Kanifing", lat:13.4540, lon:-16.6800, radius:0.12},
+    {name:"Brikama", lat:13.2800, lon:-16.6500, radius:0.28},
+    {name:"Mansakonko", lat:13.4000, lon:-15.5500, radius:0.55},
+    {name:"Kerewan", lat:13.4900, lon:-16.0900, radius:0.65},
+    {name:"Kuntaur", lat:13.6700, lon:-14.8900, radius:0.65},
+    {name:"Janjanbureh", lat:13.5300, lon:-14.7700, radius:0.65},
+    {name:"Basse", lat:13.3100, lon:-14.2200, radius:0.75}
+];
+
+const DISTRICTS = [
+    "Banjul",
+    "Kanifing",
+    "Kombo North",
+    "Kombo Central",
+    "Kombo South",
+    "Kombo East",
+    "Foni Bintang",
+    "Foni Bondali",
+    "Foni Brefet",
+    "Foni Kansala",
+    "Foni Jarrol",
+    "Kiang Central",
+    "Kiang East",
+    "Kiang West",
+    "Jarra Central",
+    "Jarra East",
+    "Jarra West",
+    "Lower Niumi",
+    "Upper Niumi",
+    "Jokadu",
+    "Lower Baddibu",
+    "Central Baddibu",
+    "Upper Baddibu",
+    "Lower Saloum",
+    "Upper Saloum",
+    "Niani",
+    "Nianija",
+    "Sami",
+    "Niamina East",
+    "Niamina West",
+    "Niamina Dankunku",
+    "Fulladu West",
+    "Fulladu East",
+    "Sandu",
+    "Wuli East",
+    "Wuli West"
+];
+
+let settlements = [];
+let selectedSettlement = null;
+let selectedCoordinates = null;
+let latestWeather = null;
+let gpsMarker = null;
+let selectedMarker = null;
+let settlementLayer = L.layerGroup();
+let currentBasemap = null;
+let temperatureChart = null;
+let rainChart = null;
+
+const map = L.map("map", {
+    zoomControl:true,
+    scrollWheelZoom:true
+}).setView(GAMBIA_CENTER, 8);
+
+const basemaps = {
+    street: L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {maxZoom:19, attribution:"© OpenStreetMap contributors"}
+    ),
+    satellite: L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {maxZoom:19, attribution:"Tiles © Esri"}
+    ),
+    topo: L.tileLayer(
+        "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        {maxZoom:17, attribution:"© OpenTopoMap"}
+    ),
+    dark: L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        {maxZoom:19, attribution:"© CARTO"}
+    )
+};
+
+function setBasemap(name) {
+    if(currentBasemap) map.removeLayer(currentBasemap);
+    currentBasemap = basemaps[name] || basemaps.street;
+    currentBasemap.addTo(map);
+}
+
+setBasemap("street");
+settlementLayer.addTo(map);
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function message(text) {
+    document.getElementById("appMessage").textContent = text;
+}
+
+function safeNumber(value, digits=1) {
+    if(value === null || value === undefined || !Number.isFinite(Number(value))) {
+        return "--";
+    }
+    return Number(value).toFixed(digits);
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const rad = d => d * Math.PI / 180;
+    const dLat = rad(lat2-lat1);
+    const dLon = rad(lon2-lon1);
+    const a = Math.sin(dLat/2)**2 +
+        Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function nearestSettlement(lat, lon) {
+    if(!settlements.length) return null;
+    let best = null;
+    let bestDistance = Infinity;
+
+    settlements.forEach(s => {
+        const d = haversine(lat, lon, s.lat, s.lon);
+        if(d < bestDistance) {
+            bestDistance = d;
+            best = {...s, distance:d};
+        }
+    });
+
+    return best;
+}
+
+function weatherInfo(code, isDay=1) {
+    if(code === 0) return {text:"Clear sky", icon:isDay ? "☀️" : "🌙"};
+    if(code === 1) return {text:"Mainly clear", icon:isDay ? "🌤️" : "🌙"};
+    if(code === 2) return {text:"Partly cloudy", icon:"⛅"};
+    if(code === 3) return {text:"Overcast", icon:"☁️"};
+    if(code === 45 || code === 48) return {text:"Fog", icon:"🌫️"};
+    if([51,53,55,56,57].includes(code)) return {text:"Drizzle", icon:"🌦️"};
+    if([61,63,65,66,67].includes(code)) return {text:"Rain", icon:"🌧️"};
+    if([71,73,75,77,85,86].includes(code)) return {text:"Snow", icon:"❄️"};
+    if([80,81,82].includes(code)) return {text:"Rain showers", icon:"🌦️"};
+    if([95,96,99].includes(code)) return {text:"Thunderstorm", icon:"⛈️"};
+    return {text:"Weather conditions", icon:"🌤️"};
+}
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;",
+        '"':"&quot;", "'":"&#39;"
+    })[c]);
+}
+
+function classifyRegion(lat, lon) {
+    let nearest = null;
+    let distance = Infinity;
+
+    ADMIN_AREAS.forEach(area => {
+        const d = haversine(lat, lon, area.lat, area.lon);
+        if(d < distance) {
+            distance = d;
+            nearest = area.name;
+        }
+    });
+
+    return nearest || "Unclassified";
+}
+
+/* =========================================================
+   LOAD ALL MAPPED SETTLEMENTS FROM OVERPASS
+========================================================= */
+
+async function fetchOverpass() {
+    const query = `
+[out:json][timeout:90];
+area["ISO3166-1"="GM"]["admin_level"="2"]->.gambia;
+(
+ node["place"~"^(city|town|village|hamlet|isolated_dwelling|suburb|neighbourhood|locality)$"](area.gambia);
+ way["place"~"^(city|town|village|hamlet|isolated_dwelling|suburb|neighbourhood|locality)$"](area.gambia);
+ relation["place"~"^(city|town|village|hamlet|isolated_dwelling|suburb|neighbourhood|locality)$"](area.gambia);
+);
+out center tags;
+`;
+
+    const endpoints = [
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://overpass.private.coffee/api/interpreter"
+    ];
+
+    let lastError = null;
+
+    for(const endpoint of endpoints) {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 100000);
+
+            const response = await fetch(endpoint, {
+                method:"POST",
+                headers:{"Content-Type":"application/x-www-form-urlencoded"},
+                body:"data=" + encodeURIComponent(query),
+                signal:controller.signal
+            });
+
+            clearTimeout(timeout);
+
+            if(!response.ok) {
+                throw new Error("Overpass server returned " + response.status);
+            }
+
+            const data = await response.json();
+            if(!Array.isArray(data.elements)) {
+                throw new Error("Invalid settlement response");
+            }
+
+            return data.elements;
+        } catch(error) {
+            lastError = error;
+        }
+    }
+
+    throw lastError || new Error("Could not load mapped settlements");
+}
+
+function normaliseSettlements(elements) {
+    const unique = new Map();
+
+    elements.forEach(el => {
+        const tags = el.tags || {};
+        const name = tags["name:en"] || tags.name || tags["name:fr"];
+        const lat = el.lat ?? el.center?.lat;
+        const lon = el.lon ?? el.center?.lon;
+
+        if(!name || !Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+        if(lat < 13.0 || lat > 13.85 || lon < -16.85 || lon > -13.75) return;
+
+        const key = name.trim().toLowerCase() + "_" +
+            lat.toFixed(4) + "_" + lon.toFixed(4);
+
+        if(unique.has(key)) return;
+
+        unique.set(key, {
+            id:el.id,
+            name:name.trim(),
+            lat,
+            lon,
+            place:tags.place || "settlement",
+            region:classifyRegion(lat,lon),
+            district:""
+        });
+    });
+
+    return Array.from(unique.values()).sort((a,b) =>
+        a.name.localeCompare(b.name)
+    );
+}
+
+function loadSettlementOptions() {
+    const datalist = document.getElementById("settlementOptions");
+    const select = document.getElementById("settlementSelect");
+
+    datalist.innerHTML = "";
+    select.innerHTML = '<option value="">Select settlement</option>';
+
+    settlements.forEach(s => {
+        const option = document.createElement("option");
+        option.value = s.name;
+        datalist.appendChild(option);
+
+        const option2 = document.createElement("option");
+        option2.value = s.id + "";
+        option2.textContent = s.name + " (" + s.region + ")";
+        select.appendChild(option2);
+    });
+
+    document.getElementById("settlementCount").textContent =
+        settlements.length.toLocaleString();
+}
+
+function renderSettlementMarkers() {
+    settlementLayer.clearLayers();
+
+    const mode = document.getElementById("markerSelect").value;
+    if(mode === "none" || mode === "selected") return;
+
+    const markers = L.featureGroup();
+
+    settlements.forEach(s => {
+        const marker = L.circleMarker([s.lat,s.lon], {
+            radius:3,
+            color:"#1769aa",
+            weight:1,
+            fillColor:"#2588d8",
+            fillOpacity:.75
+        });
+
+        marker.bindTooltip(
+            "<strong>" + escapeHtml(s.name) + "</strong><br>" +
+            escapeHtml(s.region),
+            {direction:"top"}
+        );
+
+        marker.on("click", () => {
+            selectLocation(s.lat,s.lon,s.name,s);
+        });
+
+        markers.addLayer(marker);
+    });
+
+    settlementLayer.addLayer(markers);
+}
+
+async function loadSettlements() {
+    message("Loading mapped Gambia settlements...");
+    document.getElementById("settlementCount").textContent = "Loading";
+
+    try {
+        const elements = await fetchOverpass();
+        settlements = normaliseSettlements(elements);
+
+        loadSettlementOptions();
+        renderSettlementMarkers();
+
+        message(settlements.length.toLocaleString() +
+            " mapped settlements loaded from OpenStreetMap.");
+
+        const banjul = settlements.find(s =>
+            s.name.toLowerCase() === "banjul"
+        );
+
+        if(banjul) {
+            await selectLocation(banjul.lat,banjul.lon,banjul.name,banjul);
+        } else {
+            message("Settlements loaded. Select a location to view weather.");
+        }
+
+    } catch(error) {
+        console.error(error);
+        document.getElementById("settlementCount").textContent = "Unavailable";
+        message("Could not load OSM settlements. Check internet access and try refreshing.");
+    }
+}
+
+/* =========================================================
+   WEATHER API
+========================================================= */
+
+async function getWeather(lat,lon) {
+    const params = new URLSearchParams({
+        latitude:lat,
+        longitude:lon,
+        current:[
+            "temperature_2m",
+            "relative_humidity_2m",
+            "apparent_temperature",
+            "is_day",
+            "precipitation",
+            "rain",
+            "showers",
+            "weather_code",
+            "wind_speed_10m",
+            "wind_direction_10m",
+            "surface_pressure",
+            "cloud_cover"
+        ].join(","),
+        hourly:[
+            "temperature_2m",
+            "precipitation_probability",
+            "precipitation",
+            "weather_code",
+            "wind_speed_10m"
+        ].join(","),
+        daily:[
+            "weather_code",
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_sum",
+            "precipitation_probability_max",
+            "sunrise",
+            "sunset"
+        ].join(","),
+        timezone:"auto",
+        forecast_days:"7"
+    });
+
+    const url = "https://api.open-meteo.com/v1/forecast?" + params.toString();
+
+    const response = await fetch(url);
+    if(!response.ok) throw new Error("Weather API error: " + response.status);
+
+    return await response.json();
+}
+
+async function selectLocation(lat,lon,name,settlement=null) {
+    if(!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) return;
+
+    selectedCoordinates = {lat:Number(lat),lon:Number(lon)};
+    selectedSettlement = settlement;
+    message("Retrieving forecast for " + name + "...");
+
+    document.getElementById("mapLocationLabel").textContent = name;
+    document.getElementById("weatherLocation").textContent = name;
+    document.getElementById("weatherDescription").textContent = "Loading weather...";
+    document.getElementById("temperature").textContent = "--°";
+
+    if(selectedMarker) map.removeLayer(selectedMarker);
+
+    selectedMarker = L.circleMarker([lat,lon], {
+        radius:9,
+        color:"#e07820",
+        weight:3,
+        fillColor:"#f59e0b",
+        fillOpacity:1
+    }).addTo(map);
+
+    selectedMarker.bindPopup("<strong>" + escapeHtml(name) + "</strong>");
+    map.setView([lat,lon], Math.max(map.getZoom(),10));
+
+    try {
+        const data = await getWeather(lat,lon);
+        latestWeather = data;
+        renderWeather(data,name);
+        message("Forecast updated successfully.");
+    } catch(error) {
+        console.error(error);
+        document.getElementById("weatherDescription").textContent =
+            "Weather service temporarily unavailable.";
+        message("Unable to retrieve weather. Please try again.");
+    }
+}
+
+/* =========================================================
+   RENDER WEATHER AND ANALYTICS
+========================================================= */
+
+function renderWeather(data,name) {
+    const c = data.current;
+    const current = weatherInfo(c.weather_code,c.is_day);
+
+    document.getElementById("weatherLocation").textContent = name;
+    document.getElementById("weatherDescription").textContent = current.text;
+    document.getElementById("weatherIcon").textContent = current.icon;
+    document.getElementById("temperature").textContent =
+        safeNumber(c.temperature_2m,1) + "°";
+
+    document.getElementById("weatherTime").textContent =
+        "Local time: " + c.time.replace("T"," ") +
+        " | " + data.timezone;
+
+    document.getElementById("feelsLike").textContent =
+        safeNumber(c.apparent_temperature,1);
+
+    document.getElementById("humidity").textContent =
+        safeNumber(c.relative_humidity_2m,0);
+
+    document.getElementById("wind").textContent =
+        safeNumber(c.wind_speed_10m,1);
+
+    document.getElementById("rain").textContent =
+        safeNumber(c.precipitation,1);
+
+    document.getElementById("cloud").textContent =
+        safeNumber(c.cloud_cover,0);
+
+    document.getElementById("pressure").textContent =
+        safeNumber(c.surface_pressure,0);
+
+    renderCharts(data);
+    renderDailyForecast(data);
+    renderWeeklySummary(data);
+}
+
+function renderCharts(data) {
+    const hourly = data.hourly;
+    const now = new Date(data.current.time).getTime();
+
+    let indices = [];
+
+    hourly.time.forEach((t,i) => {
+        if(new Date(t).getTime() >= now && indices.length < 24) {
+            indices.push(i);
+        }
+    });
+
+    if(!indices.length) {
+        indices = Array.from({length:24},(_,i)=>i);
+    }
+
+    const labels = indices.map(i =>
+        hourly.time[i].substring(11,16)
+    );
+
+    const temperatures = indices.map(i => hourly.temperature_2m[i]);
+    const rainfall = indices.map(i => hourly.precipitation[i]);
+    const probability = indices.map(i => hourly.precipitation_probability[i]);
+
+    if(temperatureChart) temperatureChart.destroy();
+    if(rainChart) rainChart.destroy();
+
+    temperatureChart = new Chart(
+        document.getElementById("temperatureChart"),
+        {
+            type:"line",
+            data:{
+                labels,
+                datasets:[{
+                    label:"Temperature °C",
+                    data:temperatures,
+                    borderColor:"#1769aa",
+                    backgroundColor:"#1769aa20",
+                    fill:true,
+                    tension:.35,
+                    pointRadius:2
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins:{legend:{display:false}},
+                scales:{
+                    x:{ticks:{maxTicksLimit:6,font:{size:9}}},
+                    y:{ticks:{font:{size:9}}}
+                }
+            }
+        }
+    );
+
+    rainChart = new Chart(
+        document.getElementById("rainChart"),
+        {
+            type:"bar",
+            data:{
+                labels,
+                datasets:[
+                    {
+                        label:"Rainfall mm",
+                        data:rainfall,
+                        backgroundColor:"#1769aa"
+                    },
+                    {
+                        label:"Rain probability %",
+                        data:probability,
+                        type:"line",
+                        borderColor:"#e07820",
+                        backgroundColor:"#e07820",
+                        yAxisID:"y1",
+                        tension:.3,
+                        pointRadius:1
+                    }
+                ]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins:{legend:{labels:{font:{size:9}}}},
+                scales:{
+                    x:{ticks:{maxTicksLimit:6,font:{size:9}}},
+                    y:{beginAtZero:true,ticks:{font:{size:9}}},
+                    y1:{
+                        beginAtZero:true,
+                        max:100,
+                        position:"right",
+                        grid:{drawOnChartArea:false},
+                        ticks:{font:{size:9}}
+                    }
+                }
+            }
+        }
+    );
+}
+
+function renderDailyForecast(data) {
+    const d = data.daily;
+    const container = document.getElementById("forecastList");
+    container.innerHTML = "";
+
+    d.time.forEach((date,i) => {
+        const info = weatherInfo(d.weather_code[i]);
+        const day = new Date(date + "T12:00:00")
+            .toLocaleDateString("en-GB",{weekday:"short"});
+
+        const row = document.createElement("div");
+        row.className = "forecast-day";
+
+        row.innerHTML = `
+            <strong>${day}</strong>
+            <span class="forecast-icon">${info.icon}</span>
+            <span>${safeNumber(d.temperature_2m_min[i],0)}° /
+                  ${safeNumber(d.temperature_2m_max[i],0)}°</span>
+            <span class="forecast-rain">
+                ${safeNumber(d.precipitation_probability_max[i],0)}% rain
+            </span>
+        `;
+
+        row.title = info.text + " | " + date;
+        container.appendChild(row);
+    });
+}
+
+function renderWeeklySummary(data) {
+    const d = data.daily;
+
+    const max = Math.max(...d.temperature_2m_max);
+    const min = Math.min(...d.temperature_2m_min);
+    const rain = d.precipitation_sum.reduce((a,b)=>a+(b || 0),0);
+    const probability = Math.max(...d.precipitation_probability_max);
+
+    document.getElementById("weekMax").textContent =
+        safeNumber(max,1) + " °C";
+
+    document.getElementById("weekMin").textContent =
+        safeNumber(min,1) + " °C";
+
+    document.getElementById("weekRain").textContent =
+        safeNumber(rain,1) + " mm";
+
+    document.getElementById("weekProbability").textContent =
+        safeNumber(probability,0) + " %";
+}
+
+/* =========================================================
+   GPS LOCATION
+========================================================= */
+
+function useGPS() {
+    if(!navigator.geolocation) {
+        message("Your browser does not support GPS location.");
+        return;
+    }
+
+    message("Requesting permission to access your GPS location...");
+
+    navigator.geolocation.getCurrentPosition(
+        async position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            if(gpsMarker) map.removeLayer(gpsMarker);
+
+            gpsMarker = L.circleMarker([lat,lon], {
+                radius:10,
+                color:"#16865b",
+                weight:3,
+                fillColor:"#20b879",
+                fillOpacity:1
+            }).addTo(map);
+
+            gpsMarker.bindPopup(
+                "<strong>Your current GPS position</strong><br>" +
+                "Accuracy: " + Math.round(accuracy) + " metres"
+            ).openPopup();
+
+            const nearest = nearestSettlement(lat,lon);
+            let label = "My GPS Location";
+
+            if(nearest) {
+                label = "GPS near " + nearest.name;
+            }
+
+            await selectLocation(lat,lon,label,null);
+
+            if(nearest) {
+                message("GPS weather loaded. Nearest mapped settlement: " +
+                    nearest.name + " (" + safeNumber(nearest.distance,1) + " km away).");
+            } else {
+                message("GPS weather loaded successfully.");
+            }
+        },
+        error => {
+            let reason = "Unable to access GPS.";
+            if(error.code === 1) reason = "GPS permission was denied.";
+            if(error.code === 2) reason = "GPS position is unavailable.";
+            if(error.code === 3) reason = "GPS request timed out.";
+
+            message(reason + " Check your browser location settings.");
+        },
+        {
+            enableHighAccuracy:true,
+            timeout:20000,
+            maximumAge:60000
+        }
+    );
+}
+
+/* =========================================================
+   USER INTERFACE EVENTS
+========================================================= */
+
+document.getElementById("loadWeather").addEventListener("click",() => {
+    const id = document.getElementById("settlementSelect").value;
+    const s = settlements.find(x => String(x.id) === String(id));
+
+    if(!s) {
+        message("Please select a mapped settlement.");
+        return;
+    }
+
+    selectLocation(s.lat,s.lon,s.name,s);
+});
+
+document.getElementById("settlementSearch").addEventListener("change",() => {
+    const name = document.getElementById("settlementSearch").value.trim();
+    const s = settlements.find(x => x.name.toLowerCase() === name.toLowerCase());
+
+    if(!s) {
+        message("Settlement not found in the loaded OpenStreetMap results.");
+        return;
+    }
+
+    document.getElementById("settlementSelect").value = String(s.id);
+    selectLocation(s.lat,s.lon,s.name,s);
+});
+
+document.getElementById("regionSelect").addEventListener("change",event => {
+    const region = event.target.value;
+    const district = document.getElementById("districtSelect");
+    district.innerHTML = '<option value="">All districts</option>';
+
+    if(region) {
+        const relevant = settlements.filter(s => s.region === region);
+        const names = [...new Set(relevant.map(s => s.district).filter(Boolean))];
+
+        names.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            district.appendChild(opt);
+        });
+    }
+
+    updateSettlementFilter();
+});
+
+document.getElementById("districtSelect").addEventListener("change",
+    updateSettlementFilter
+);
+
+function updateSettlementFilter() {
+    const region = document.getElementById("regionSelect").value;
+    const district = document.getElementById("districtSelect").value;
+    const select = document.getElementById("settlementSelect");
+
+    select.innerHTML = '<option value="">Select settlement</option>';
+
+    const filtered = settlements.filter(s =>
+        (!region || s.region === region) &&
+        (!district || s.district === district)
+    );
+
+    filtered.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = String(s.id);
+        opt.textContent = s.name + " (" + s.region + ")";
+        select.appendChild(opt);
+    });
+}
+
+document.getElementById("gpsButton").addEventListener("click",useGPS);
+document.getElementById("mapGps").addEventListener("click",useGPS);
+
+document.getElementById("zoomGambia").addEventListener("click",() => {
+    map.setView(GAMBIA_CENTER,8);
+});
+
+document.getElementById("basemapSelect").addEventListener("change",e => {
+    setBasemap(e.target.value);
+});
+
+document.getElementById("markerSelect").addEventListener("change",() => {
+    renderSettlementMarkers();
+});
+
+document.getElementById("resetButton").addEventListener("click",() => {
+    document.getElementById("regionSelect").value = "";
+    document.getElementById("districtSelect").innerHTML =
+        '<option value="">All districts</option>';
+    document.getElementById("settlementSearch").value = "";
+    document.getElementById("settlementSelect").value = "";
+    document.getElementById("basemapSelect").value = "street";
+    document.getElementById("markerSelect").value = "all";
+
+    setBasemap("street");
+    renderSettlementMarkers();
+
+    if(selectedMarker) {
+        map.removeLayer(selectedMarker);
+        selectedMarker = null;
+    }
+
+    if(gpsMarker) {
+        map.removeLayer(gpsMarker);
+        gpsMarker = null;
+    }
+
+    map.setView(GAMBIA_CENTER,8);
+    document.getElementById("mapLocationLabel").textContent =
+        "The Gambia • Settlement map";
+
+    message("Dashboard reset. Select a settlement or use GPS.");
+});
+
+/* =========================================================
+   CSV EXPORT
+========================================================= */
+
+document.getElementById("exportCsv").addEventListener("click",() => {
+    if(!latestWeather) {
+        message("Load a weather forecast before exporting.");
+        return;
+    }
+
+    const d = latestWeather.daily;
+    const rows = [
+        ["Date","Weather Code","Minimum Temperature C",
+         "Maximum Temperature C","Rainfall mm",
+         "Maximum Rain Probability Percent","Sunrise","Sunset"]
+    ];
+
+    d.time.forEach((date,i) => {
+        rows.push([
+            date,
+            d.weather_code[i],
+            d.temperature_2m_min[i],
+            d.temperature_2m_max[i],
+            d.precipitation_sum[i],
+            d.precipitation_probability_max[i],
+            d.sunrise[i],
+            d.sunset[i]
+        ]);
+    });
+
+    const csv = rows.map(row =>
+        row.map(value => '"' + String(value ?? "").replace(/"/g,'""') + '"')
+            .join(",")
+    ).join("\n");
+
+    const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "Gambia_Weather_7Day_Forecast.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+});
+
+/* =========================================================
+   CLOCK AND INITIALISATION
+========================================================= */
+
+function updateClock() {
+    document.getElementById("clock").textContent =
+        new Date().toLocaleString("en-GB",{
+            day:"2-digit",
+            month:"short",
+            hour:"2-digit",
+            minute:"2-digit"
+        });
+}
+
+setInterval(updateClock,1000);
+updateClock();
+
+REGIONS.forEach(region => {
+    const option = document.createElement("option");
+    option.value = region;
+    option.textContent = region;
+    document.getElementById("regionSelect").appendChild(option);
+});
+
+/* Load settlement locations once at startup.
+   Weather API is called only after location selection. */
+loadSettlements();
+
+</script>
+</body>
+</html>
